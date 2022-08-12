@@ -5,142 +5,73 @@ using System.Net.Mail;
 using System.Net.Http;
 using HtmlAgilityPack;
 using System.Threading;
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace Web_Scraper
 {
     class Program
     {
-        static void Main(string[] args)
-        {
-            bool devMode = true;
+        static void Main(string[] args) => new Program().RunBotAsync().GetAwaiter().GetResult();
 
+        private DiscordSocketClient _client;
+        private CommandService _commands;
+        private IServiceProvider _services;
 
-            LaunchScraper scraper = new LaunchScraper();
+        public async Task RunBotAsync() {
+            _client = new DiscordSocketClient();
+            _commands = new CommandService();
+            _services = new ServiceCollection()
+                .AddSingleton(_client)
+                .AddSingleton(_commands)
+                .BuildServiceProvider();
 
-            Thread.Sleep(5000);
+            string token = "MTAwNzEzNzkwMDI3MTUwMTQxMw.GZ8uyu.m7Yd-mruz8UytzZZvj4101M14KJF07aFVZ1YLA";
 
-            SendEmail(scraper.GetLaunches(), devMode);
+            _client.Log += _client_Log;
+
+            await RegisterCommandsAsync();
+
+            await _client.LoginAsync(TokenType.Bot, token);
+
+            await _client.StartAsync();
+
+            await Task.Delay(-1);
+
         }
 
-        public static void SendEmail(List<LaunchData> launches, bool devMode)
+        private Task _client_Log(LogMessage arg)
         {
-            try
-            {
-                SmtpClient client = new SmtpClient("smtp-mail.outlook.com");
-                client.Port = 587;
-                client.DeliveryMethod = SmtpDeliveryMethod.Network;
-                client.UseDefaultCredentials = false;
-                System.Net.NetworkCredential credential = new System.Net.NetworkCredential("<email>", "<password>");
-                client.EnableSsl = true;
-                client.Credentials = credential;
-
-                MailMessage message;
-
-                message = new MailMessage("<my email>", "<my email>");
-
-                message.Subject = "Upcoming Spacex Launches";
-                message.Body = GetHTMLFormatting(launches);
-                message.IsBodyHtml = true;
-
-                Console.WriteLine("Sending email!");
-
-
-                    client.Send(message);
-
-               
-            } catch (Exception ex) {
-                throw;
-            }
+            Console.WriteLine(arg);
+            return Task.CompletedTask;
         }
 
-        public static string GetHTMLFormatting(List<LaunchData> launches) 
+        public async Task RegisterCommandsAsync() 
         {
-            string body = "";
+            _client.MessageReceived += HandleCommandAsync;
+            
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+        }
 
-            body += "<body><center><h1>The following is a list of upcoming SpaceX Launches</h1><br>";
+        private async Task HandleCommandAsync(SocketMessage arg) 
+        {
+            var message = arg as SocketUserMessage;
+            var context = new SocketCommandContext(_client, message);
 
-            body += "<table>";
-            body += "<tr style=\"text-align: center; \">";
-            body += "<td><h3> Mission Name </h3></td>";
-            body += "<td><h3> Launch Status </h3></td>";
-            body += "<td><h3> Launch Date </h3></td>";
-            body += "<td><h3> Launch Location </h3></td>";
-            body += "</tr>";
+            //Prevent bot from talking to itself
+            if (message.Author.IsBot) return;
 
-            foreach (LaunchData localLaunch in launches)
+            int argPos = 0;
+            if (message.HasStringPrefix("!", ref argPos))
             {
-                DateTime launchDate = localLaunch.GetLaunchDate();
-
-                TimeSpan tMinus = launchDate.Subtract(DateTime.Now);
-                Console.WriteLine(launchDate.ToString() + " " + tMinus.TotalHours);
-
-
-                if (localLaunch.IsLaunchDateProjected() == false && tMinus.TotalHours <= 48)
-                {
-                    body += "<tr style=\"text-align: center; color: darkgreen\">";
-                }
-                else {
-                    body += "<tr style=\"text-align: center;\">";
-                }
-
-                body += "<td><b>" + localLaunch.GetLaunchName() + "</b></td>";
-
-                if (localLaunch.IsLaunchDateProjected() == true) {
-                    body += "<td style=\"color: Orange;\">Projected</td>";
-                } else if (tMinus.TotalHours <= 48)
-                {
-                    body += "<td><b>Launching Soon!</b></td>";
-                }
-                else if (tMinus.TotalHours <= 0)
-                {
-                    body += "<td><b>Launched!</b></td>";
-                }
-                else
-                {
-                    body += "<td style=\"color: Green;\">Scheduled</td>";
-                }
-
-                
-                if (localLaunch.IsLaunchDateProjected() == true)
-                {
-                    //Get month value as a string
-                    int month = localLaunch.GetLaunchDate().Month;
-                    string monthString = "null";
-
-                    if (month == 1) monthString = "January";
-                    if (month == 2) monthString = "February";
-                    if (month == 3) monthString = "March";
-                    if (month == 4) monthString = "April";
-                    if (month == 5) monthString = "May";
-                    if (month == 6) monthString = "June";
-                    if (month == 7) monthString = "July";
-                    if (month == 8) monthString = "August";
-                    if (month == 9) monthString = "September";
-                    if (month == 10) monthString = "October";
-                    if (month == 11) monthString = "November";
-                    if (month == 12) monthString = "December";
-
-                    body += "<td>" + monthString + ", " + localLaunch.GetLaunchDate().Year + " </td>";
-                }
-                else 
-                {
-                    body += "<td>" + localLaunch.GetLaunchDate() + " </td>";
-                }
-
-                body += "<td>" + localLaunch.GetLaunchLocation() + "</td>";
-
-                body += "</tr>";
+                var result = await _commands.ExecuteAsync(context, argPos, _services);
+                if (!result.IsSuccess) Console.WriteLine(result.ErrorReason);
             }
 
-            body += "</table>";
-            body += "<center></body>";
-
-            return body;
-        }
-
-        public static bool SameDay(DateTime time) {
-            DateTime today = DateTime.Now;
-            return ((today.Day == time.Day) && (today.Month == time.Month) && (today.Year == time.Year));
         }
     }
 }
