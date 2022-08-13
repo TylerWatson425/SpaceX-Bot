@@ -137,7 +137,7 @@ namespace Web_Scraper
                 }
                 else
                 {
-                    body += " on " + localLaunch.GetLaunchDate();
+                    body += " on " + localLaunch.GetLaunchDate() + " (PST)";
                 }
 
                 body += " at " + localLaunch.GetLaunchLocation();
