@@ -5,6 +5,7 @@ using System.Net.Mail;
 using System.Net.Http;
 using System.Threading;
 using HtmlAgilityPack;
+using Discord;
 
 namespace Web_Scraper
 {
@@ -16,22 +17,19 @@ namespace Web_Scraper
             launches = new List<LaunchData>();
 
             string[] pages = { "https://www.spacelaunchschedule.com/category/spacex/", "https://www.spacelaunchschedule.com/category/spacex/page/2/" };
-
-            GetLaunchData(pages[0]);
-
-            /*
+            
             for (int i = 0; i < pages.Length; i++) {
                 GetLaunchData(pages[i]);
-                Thread.Sleep(2500);
+                Thread.Sleep(500);
             }
-            */
+            
         }
 
-        public string PrintSchedule()
+        public EmbedBuilder PrintSchedule()
         {
             LaunchScraper scraper = new LaunchScraper();
 
-            Thread.Sleep(5000);
+            Thread.Sleep(1000);
 
             return GetDiscordMessageFormatting(scraper.GetLaunches());
         }
@@ -67,17 +65,16 @@ namespace Web_Scraper
             }
         }
 
-        public static string GetDiscordMessageFormatting(List<LaunchData> launches) 
+        public static EmbedBuilder GetDiscordMessageFormatting(List<LaunchData> launches) 
         {
-            string body = "";
-
-            body += ":rocket:  **The following is a list of upcoming SpaceX Launches**  :rocket: \n";
+            string description = "";
+            string subject = ":rocket:  **Upcoming SpaceX Launches**  :rocket: \n";
 
             int counter = 0;
 
             foreach (LaunchData localLaunch in launches)
             {
-                if (counter >= 10) break;
+                if (counter >= 15) break;
 
                 DateTime launchDate = localLaunch.GetLaunchDate();
 
@@ -94,23 +91,23 @@ namespace Web_Scraper
                     body += "<tr style=\"text-align: center;\">";
                 }*/
 
-                body += "__**" + localLaunch.GetLaunchName() + "**__";
+                description += "__**" + localLaunch.GetLaunchName() + "**__";
 
                 if (localLaunch.IsLaunchDateProjected() == true)
                 {
-                    body += " is **Projected**";
+                    description += " is **Projected**";
                 }
                 else if (tMinus.TotalHours <= 48)
                 {
-                    body += " is **Launching Soon**";
+                    description += " is **Launching Soon**";
                 }
                 else if (tMinus.TotalHours <= 0)
                 {
-                    body += " has **Launched!**";
+                    description += " has **Launched!**";
                 }
                 else
                 {
-                    body += " is currently **Scheduled**";
+                    description += " is currently **Scheduled**";
                 }
 
 
@@ -133,20 +130,27 @@ namespace Web_Scraper
                     if (month == 11) monthString = "November";
                     if (month == 12) monthString = "December";
 
-                    body += " on " + monthString + ", " + localLaunch.GetLaunchDate().Year;
+                    description += " on " + monthString + ", " + localLaunch.GetLaunchDate().Year;
                 }
                 else
                 {
-                    body += " on " + localLaunch.GetLaunchDate() + " (PST)";
+                    description += " on " + localLaunch.GetLaunchDate() + " (PST)";
                 }
 
-                body += " at " + localLaunch.GetLaunchLocation();
+                description += " at " + localLaunch.GetLaunchLocation();
 
-                body += "\n";
+                description += "\n";
 
                 counter++; 
             }
-            return body;
+
+            var embedBuilder = new EmbedBuilder()  
+                    .WithTitle(subject)
+                    .WithDescription(description)
+                    .WithColor(Color.Green)
+                    .WithCurrentTimestamp();
+
+            return embedBuilder;
         }
 
         public static string GetHTMLFormatting(List<LaunchData> launches)

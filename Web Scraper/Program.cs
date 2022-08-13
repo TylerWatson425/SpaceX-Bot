@@ -65,6 +65,14 @@ namespace Web_Scraper
             //Prevent bot from talking to itself
             if (message.Author.IsBot) return;
 
+            Console.WriteLine("Channel name: " + context.Channel.Name);
+
+            if ((!context.Channel.Name.Equals("andrew-runs-commands-on-skyblock")) && (!context.Channel.Name.Equals("bot-commands"))) 
+            {
+                Console.WriteLine("Wrong channel! Channel name: " + context.Channel.Name);
+                return;
+            }
+
             int argPos = 0;
             if (message.HasStringPrefix("!", ref argPos))
             {
