@@ -10,13 +10,24 @@ namespace Web_Scraper.Modules
     public class Commands : ModuleBase<SocketCommandContext>
     {
         [Command("next_launch")]
+        [Alias("nl", "nl star_link", "nl star_ship")]
         public async Task next_launch()
         {
             Console.WriteLine(Context.Message.Content);
-
             LaunchScraper scraper = new LaunchScraper();
-            await ReplyAsync(embed: scraper.PrintSchedule().Build());
 
+            string filterOption = "";
+
+            if ((Context.Message.Content != "!next_launch") && (Context.Message.Content != "!nl")) 
+            {
+                Console.WriteLine("hi!");
+                filterOption = Context.Message.Content.Split(' ')[1];
+                await ReplyAsync(embed: scraper.PrintSchedule(filterOption).Build());
+
+            } else
+            {
+                await ReplyAsync(embed: scraper.PrintSchedule(filterOption).Build());
+            }
         }
 
         [Command("sanity")]
@@ -31,23 +42,26 @@ namespace Web_Scraper.Modules
             var embedBuilder = new Discord.EmbedBuilder()
                     .WithTitle("title")
                     .WithDescription("description")
-                    .WithColor(Discord.Color.Green)
+                    .WithColor(Discord.Color.DarkOrange)
                     .WithCurrentTimestamp();
+
             await ReplyAsync(embed: embedBuilder.Build());
         }
 
-        [Command("!next_closure")]
+        [Command("next_closure")]
+        [Alias("nc")]
         public async Task next_closure()
         {
             await ReplyAsync("Coming soon!");
         }
 
-            [Command("help")]
+        [Command("help")]
         public async Task help()
         {
 
             string helpMessage = ""
                 + "**!next_launch** prints the next 10 upcoming launches \n"
+                + "**!nl <star_link> or <star_ship>** the secondary parameters allows you to filter by star link or star ship launches only \n"
                 + "**!help** prints this message \n"
                 + "**!sanity** checks whether the bot is alive\n"
                 + "**!next_closure** checks whether a boca chica static fire is scheduled or active\n";
@@ -56,7 +70,7 @@ namespace Web_Scraper.Modules
             var embedBuilder = new Discord.EmbedBuilder()
                     .WithTitle("SpaceX Bot Commands")
                     .WithDescription(helpMessage)
-                    .WithColor(Discord.Color.Green)
+                    .WithColor(Discord.Color.DarkBlue)
                     .WithCurrentTimestamp();
 
             

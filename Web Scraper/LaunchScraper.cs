@@ -25,13 +25,121 @@ namespace Web_Scraper
             
         }
 
-        public EmbedBuilder PrintSchedule()
+        public EmbedBuilder PrintSchedule(string filter)
         {
             LaunchScraper scraper = new LaunchScraper();
 
             Thread.Sleep(1000);
 
-            return GetDiscordMessageFormatting(scraper.GetLaunches());
+            return GetDiscordMessageFormatting(scraper.GetLaunches(), filter);
+        }
+
+        public static EmbedBuilder GetDiscordMessageFormatting(List<LaunchData> launches, string filter) 
+        {
+            string subject = "";
+            string description = "";
+
+            //Process params
+            int counter = 0;
+
+            foreach (LaunchData localLaunch in launches)
+            {
+                if (counter >= 15) break;
+
+                //Process params
+                bool skipCurrent = false;
+                if (filter.Equals("star_link")) 
+                {
+                    if (counter == 0) { subject = ":rocket:  **Upcoming SpaceX Star Link Launches**  :rocket: \n"; }
+
+                    if (!localLaunch.GetLaunchName().Contains("Starlink")) 
+                    {
+                        skipCurrent = true;
+                    }
+                }
+                if (filter.Equals("star_ship"))
+                {
+                    if (counter == 0) { subject = ":rocket:  **Upcoming SpaceX Star Ship Launches**  :rocket: \n"; }
+
+                    if (!localLaunch.GetLaunchLocation().Contains("TX"))
+                    {
+                        skipCurrent = true;
+                    }
+                }
+                if (filter.Equals("")) 
+                {
+                    if (counter == 0) { subject = ":rocket:  **Upcoming SpaceX Launches**  :rocket: \n"; }
+                }
+
+                if (!skipCurrent) 
+                { 
+                    DateTime launchDate = localLaunch.GetLaunchDate();
+
+                    TimeSpan tMinus = launchDate.Subtract(DateTime.Now);
+                    Console.WriteLine(launchDate.ToString() + " " + tMinus.TotalHours);
+
+                    description += "__**" + localLaunch.GetLaunchName() + "**__";
+
+                    if (localLaunch.IsLaunchDateProjected() == true)
+                    {
+                        description += " is **projected**";
+                    }
+                    else if (tMinus.TotalHours <= 48)
+                    {
+                        description += " is **launching soon**";
+                    }
+                    else if (tMinus.TotalHours <= 0)
+                    {
+                        description += " has **launched**";
+                    }
+                    else
+                    {
+                        description += " is currently **scheduled**";
+                    }
+
+
+                    if (localLaunch.IsLaunchDateProjected() == true && tMinus.TotalHours <= 0)
+                    {
+                        //Get month value as a string
+                        int month = localLaunch.GetLaunchDate().Month;
+                        string monthString = "null";
+
+                        if (month == 1) monthString = "January";
+                        if (month == 2) monthString = "February";
+                        if (month == 3) monthString = "March";
+                        if (month == 4) monthString = "April";
+                        if (month == 5) monthString = "May";
+                        if (month == 6) monthString = "June";
+                        if (month == 7) monthString = "July";
+                        if (month == 8) monthString = "August";
+                        if (month == 9) monthString = "September";
+                        if (month == 10) monthString = "October";
+                        if (month == 11) monthString = "November";
+                        if (month == 12) monthString = "December";
+
+                        description += " for " + monthString + ", " + localLaunch.GetLaunchDate().Year;
+                    }
+                    else
+                    {
+                        description += " for " + localLaunch.GetLaunchDate() + " (PST)";
+                    }
+
+                    description += " at " + localLaunch.GetLaunchLocation();
+
+                    description += "\n";
+                }
+                
+
+                counter++; 
+            }
+
+            var embedBuilder = new EmbedBuilder()  
+                    .WithTitle(subject)
+                    .WithDescription(description)
+                    .WithColor(Color.Green)
+                    .WithCurrentTimestamp();
+
+            return embedBuilder;
         }
 
         public static void SendEmail(List<LaunchData> launches, bool devMode)
@@ -63,94 +171,6 @@ namespace Web_Scraper
             {
                 throw;
             }
-        }
-
-        public static EmbedBuilder GetDiscordMessageFormatting(List<LaunchData> launches) 
-        {
-            string description = "";
-            string subject = ":rocket:  **Upcoming SpaceX Launches**  :rocket: \n";
-
-            int counter = 0;
-
-            foreach (LaunchData localLaunch in launches)
-            {
-                if (counter >= 15) break;
-
-                DateTime launchDate = localLaunch.GetLaunchDate();
-
-                TimeSpan tMinus = launchDate.Subtract(DateTime.Now);
-                Console.WriteLine(launchDate.ToString() + " " + tMinus.TotalHours);
-
-                /*
-                if (localLaunch.IsLaunchDateProjected() == false && tMinus.TotalHours <= 48)
-                {
-                    body += "<tr style=\"text-align: center; color: darkgreen\">";
-                }
-                else
-                {
-                    body += "<tr style=\"text-align: center;\">";
-                }*/
-
-                description += "__**" + localLaunch.GetLaunchName() + "**__";
-
-                if (localLaunch.IsLaunchDateProjected() == true)
-                {
-                    description += " is **Projected**";
-                }
-                else if (tMinus.TotalHours <= 48)
-                {
-                    description += " is **Launching Soon**";
-                }
-                else if (tMinus.TotalHours <= 0)
-                {
-                    description += " has **Launched!**";
-                }
-                else
-                {
-                    description += " is currently **Scheduled**";
-                }
-
-
-                if (localLaunch.IsLaunchDateProjected() == true)
-                {
-                    //Get month value as a string
-                    int month = localLaunch.GetLaunchDate().Month;
-                    string monthString = "null";
-
-                    if (month == 1) monthString = "January";
-                    if (month == 2) monthString = "February";
-                    if (month == 3) monthString = "March";
-                    if (month == 4) monthString = "April";
-                    if (month == 5) monthString = "May";
-                    if (month == 6) monthString = "June";
-                    if (month == 7) monthString = "July";
-                    if (month == 8) monthString = "August";
-                    if (month == 9) monthString = "September";
-                    if (month == 10) monthString = "October";
-                    if (month == 11) monthString = "November";
-                    if (month == 12) monthString = "December";
-
-                    description += " on " + monthString + ", " + localLaunch.GetLaunchDate().Year;
-                }
-                else
-                {
-                    description += " on " + localLaunch.GetLaunchDate() + " (PST)";
-                }
-
-                description += " at " + localLaunch.GetLaunchLocation();
-
-                description += "\n";
-
-                counter++; 
-            }
-
-            var embedBuilder = new EmbedBuilder()  
-                    .WithTitle(subject)
-                    .WithDescription(description)
-                    .WithColor(Color.Green)
-                    .WithCurrentTimestamp();
-
-            return embedBuilder;
         }
 
         public static string GetHTMLFormatting(List<LaunchData> launches)
@@ -246,6 +266,8 @@ namespace Web_Scraper
             DateTime today = DateTime.Now;
             return ((today.Day == time.Day) && (today.Month == time.Month) && (today.Year == time.Year));
         }
+
+        //Web scraping functionality
         private async void GetLaunchData(string link)
         {
             var url = link;
@@ -291,20 +313,13 @@ namespace Web_Scraper
                     launchTime = (string)launchAnnnouncement.Descendants("time").FirstOrDefault().GetAttributeValue("dateTime", "");
                 }
 
-
-
-                Console.WriteLine(launchTime);
-
                 string launchName = (string)launchAnnnouncement.Descendants("h2").FirstOrDefault().InnerHtml;
                 launchName = launchName.Substring(0, launchName.IndexOf('<'));
-                Console.WriteLine(launchName);
 
                 string launchRocket = (string)launchAnnnouncement.Descendants("span").FirstOrDefault().InnerHtml;
-                Console.WriteLine(launchRocket);
 
                 string launchLocation = (string)launchAnnnouncement.SelectNodes("//div[@class=\"col h6 mb-0 pt-2\"]")[locationIndex].InnerHtml;
                 locationIndex++;
-                Console.WriteLine(launchLocation);
 
                 LaunchData localLaunchData = new LaunchData(launchName, launchRocket, launchTime, launchLocation);
 
@@ -318,6 +333,7 @@ namespace Web_Scraper
         }
     }
 
+    //Data capturing class
     class LaunchData
     {
         private string launchName;
