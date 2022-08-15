@@ -52,6 +52,7 @@ namespace Web_Scraper.Modules
         [Alias("nc")]
         public async Task next_closure()
         {
+            ClosureManager closureManager = new ClosureManager();
             await ReplyAsync("Coming soon!");
         }
 
