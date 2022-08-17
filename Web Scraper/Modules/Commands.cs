@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord.Commands;
 
@@ -52,7 +53,11 @@ namespace Web_Scraper.Modules
         [Alias("nc")]
         public async Task next_closure()
         {
-            await ReplyAsync("Coming soon!");
+            ClosureManager closureManager = new ClosureManager();
+
+            Thread.Sleep(2000);
+
+            await ReplyAsync(embed: closureManager.GenerateDiscordReport().Build());
         }
 
         [Command("help")]
