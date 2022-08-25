@@ -15,19 +15,18 @@ namespace Web_Scraper.Modules
         public async Task next_launch()
         {
             Console.WriteLine(Context.Message.Content);
-            LaunchScraper scraper = new LaunchScraper();
 
             string filterOption = "";
 
             if ((Context.Message.Content != "!next_launch") && (Context.Message.Content != "!nl")) 
             {
-                Console.WriteLine("hi!");
                 filterOption = Context.Message.Content.Split(' ')[1];
-                await ReplyAsync(embed: scraper.PrintSchedule(filterOption).Build());
+
+                await ReplyAsync(embed: Program._launchManager.PrintSchedule(filterOption).Build());
 
             } else
             {
-                await ReplyAsync(embed: scraper.PrintSchedule(filterOption).Build());
+                await ReplyAsync(embed: Program._launchManager.PrintSchedule(filterOption).Build());
             }
         }
 
@@ -53,11 +52,7 @@ namespace Web_Scraper.Modules
         [Alias("nc")]
         public async Task next_closure()
         {
-            ClosureManager closureManager = new ClosureManager();
-
-            Thread.Sleep(2000);
-
-            await ReplyAsync(embed: closureManager.GenerateDiscordReport().Build());
+            await ReplyAsync(embed: Program._closureManager.GenerateDiscordReport().Build());
         }
 
         [Command("help")]

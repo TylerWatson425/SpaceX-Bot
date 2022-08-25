@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mail;
-using System.Net.Http;
-using HtmlAgilityPack;
-using System.Threading;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -21,6 +15,8 @@ namespace Web_Scraper
         private DiscordSocketClient _client;
         private CommandService _commands;
         private IServiceProvider _services;
+        public static LaunchScraper _launchManager;
+        public static ClosureManager _closureManager;
 
         public async Task RunBotAsync() {
             _client = new DiscordSocketClient();
@@ -29,6 +25,10 @@ namespace Web_Scraper
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
+
+            _launchManager = new LaunchScraper();
+            _closureManager = new ClosureManager();
+
 
             string token = "MTAwNzEzNzkwMDI3MTUwMTQxMw.GZ8uyu.m7Yd-mruz8UytzZZvj4101M14KJF07aFVZ1YLA";
 
