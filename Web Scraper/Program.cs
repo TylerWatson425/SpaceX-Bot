@@ -41,7 +41,6 @@ namespace Web_Scraper
             await _client.StartAsync();
 
             await Task.Delay(-1);
-
         }
 
         private Task _client_Log(LogMessage arg)

@@ -12,17 +12,10 @@ namespace Web_Scraper
     class LaunchScraper
     {
         private List<LaunchData> launches;
+        private DateTime lastUpdate;
 
         public LaunchScraper() {
-            launches = new List<LaunchData>();
-
-            string[] pages = { "https://www.spacelaunchschedule.com/category/spacex/", "https://www.spacelaunchschedule.com/category/spacex/page/2/" };
-            
-            for (int i = 0; i < pages.Length; i++) {
-                GetLaunchData(pages[i]);
-                Thread.Sleep(500);
-            }
-            
+            UpdateData();
         }
 
         public EmbedBuilder PrintSchedule(string filter)
@@ -245,11 +238,27 @@ namespace Web_Scraper
             return body;
         }
 
-        public static bool SameDay(DateTime time)
+        public DateTime GetLastUpdate()
         {
-            DateTime today = DateTime.Now;
-            return ((today.Day == time.Day) && (today.Month == time.Month) && (today.Year == time.Year));
+            return lastUpdate;
         }
+
+        public void UpdateData()
+        {
+            launches = new List<LaunchData>();
+
+            string[] pages = { "https://www.spacelaunchschedule.com/category/spacex/", "https://www.spacelaunchschedule.com/category/spacex/page/2/" };
+
+            for (int i = 0; i < pages.Length; i++)
+            {
+                GetLaunchData(pages[i]);
+                Thread.Sleep(500);
+            }
+
+            lastUpdate = DateTime.Now;
+        }
+
+       
 
         //Web scraping functionality
         private async void GetLaunchData(string link)

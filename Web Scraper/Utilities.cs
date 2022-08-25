@@ -50,5 +50,12 @@ namespace Web_Scraper
             return monthString;
         }
 
+        //Checks if the date passed by parameter is the same as today
+        public static bool SameDay(DateTime time)
+        {
+            DateTime today = DateTime.Now;
+            return ((today.Day == time.Day) && (today.Month == time.Month) && (today.Year == time.Year));
+        }
+
     }
 }

@@ -9,11 +9,10 @@ namespace Web_Scraper
     class ClosureManager
     {
         private List<ClosureData> closureManager;
+        private DateTime lastUpdate;
         public ClosureManager()
         {
-            closureManager = new List<ClosureData>();
-
-            PopulateData();
+            UpdateData();
         }
 
         public async void PopulateData()
@@ -45,7 +44,6 @@ namespace Web_Scraper
                     if ((node.InnerText != previousText) && (node.InnerText != "\n"))
                     {
                         previousText = node.InnerText;
-                        Console.WriteLine(counter + ": " + node.InnerText + ":");
 
                         if ((counter % 4) == 1)
                         {
@@ -59,32 +57,22 @@ namespace Web_Scraper
                             {
                                 localStore.SetStatus(ClosureStatus.ALTERNATE_DATE);
                             }
-                            Console.WriteLine("!" + node.InnerText);
-
                         }
                         if ((counter % 4) == 2)
                         {
                             //Save date
                             savedDateString = node.InnerText;
-                            Console.WriteLine("!" + node.InnerText);
                         }
                         if ((counter % 4) == 3)
                         {
                             //save date
-                            Console.WriteLine("!" + node.InnerText);
-                            Console.WriteLine("saved:" + savedDateString);
                             string[] splitDateComponents = savedDateString.Split(',');
-
-                            Console.WriteLine("!!" + splitDateComponents[1].Split(' ')[1]);
-                            Console.WriteLine("!!!" + splitDateComponents[1].Split(' ')[2]);
 
                             int month = Utilities.GetMonthINT(splitDateComponents[1].Split(' ')[1]);
                             int date = Int32.Parse(splitDateComponents[1].Split(' ')[2]);
-                            Console.WriteLine("YEAR:" + splitDateComponents[2]);
                             int year = Int32.Parse(splitDateComponents[2].Substring(1));
 
                             //TODO: add start and end time parsing
-
                             time = new DateTime(year, month, date);
 
                             localStore.SetStartTime(time);
@@ -93,8 +81,6 @@ namespace Web_Scraper
                         if ((counter % 4) == 0)
                         {
                             //TODO: add beach status into ClosureStatus
-                            Console.WriteLine("!" + node.InnerText);
-
                             closureManager.Add(localStore);
                         }
                         counter++;
@@ -154,6 +140,21 @@ namespace Web_Scraper
 
             return embedBuilder;
         }
+
+        public DateTime GetLastUpdate()
+        {
+            return lastUpdate;
+        }
+
+        public void UpdateData()
+        {
+            closureManager = new List<ClosureData>();
+
+            PopulateData();
+
+            lastUpdate = DateTime.Now;
+        }
+
     }
 
     enum ClosureStatus {ACTIVE, PRIMARY_DATE, ALTERNATE_DATE}
