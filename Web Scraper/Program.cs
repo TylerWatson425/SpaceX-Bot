@@ -30,7 +30,7 @@ namespace Web_Scraper
             _closureManager = new ClosureManager();
 
 
-            string token = "MTAwNzEzNzkwMDI3MTUwMTQxMw.GZ8uyu.m7Yd-mruz8UytzZZvj4101M14KJF07aFVZ1YLA";
+            string token = "<include token here>";
 
             _client.Log += _client_Log;
 
