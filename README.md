@@ -1,5 +1,5 @@
 # Overview
-This simple C# application is tasked with going to some public websites and gathering data for future Space X Launches. Once run the application can send an email or post in a discord channel the aggregrated information on when the next launch is.
+This simple C# application which is tasked with going to some public websites and gathering publically-available data for future Space X Launches. Once run the application it can send an email or host a discord bot to allow users to get launch information in a discord channel. The application not only gathers information, but it also aggregates the data into useful, high level reports for the end use.
 
 **Email Example:**
 
